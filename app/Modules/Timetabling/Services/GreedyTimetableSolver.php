@@ -3,6 +3,7 @@
 namespace App\Modules\Timetabling\Services;
 
 use App\Modules\Core\Models\Policy;
+use App\Modules\Core\Models\CalendarBlock;
 use App\Modules\Core\Models\Room;
 use App\Modules\Core\Models\TimeSlot;
 use App\Modules\Enrollment\Models\ClassSection;
@@ -21,6 +22,18 @@ class GreedyTimetableSolver
         $rooms = Room::all();
         $timeSlots = TimeSlot::where('is_enabled', true)->get();
         $blockedPolicies = Policy::where('rule_type', 'BLOCK_TIME')->where('is_enabled', true)->get();
+        $blockedWeekdays = [];
+
+        $holidayBlocks = CalendarBlock::where('type', 'HOLIDAY')->get();
+        foreach ($holidayBlocks as $block) {
+            $current = \Carbon\Carbon::parse($block->start_dt)->startOfDay();
+            $end = \Carbon\Carbon::parse($block->end_dt)->startOfDay();
+            while ($current->lte($end)) {
+                $blockedWeekdays[] = (int) $current->dayOfWeekIso;
+                $current->addDay();
+            }
+        }
+        $blockedWeekdays = array_unique($blockedWeekdays);
 
         $occupied = [
             'room' => [],
@@ -33,6 +46,9 @@ class GreedyTimetableSolver
             $assigned = false;
 
             foreach ($timeSlots as $timeSlot) {
+                if (in_array($timeSlot->weekday, $blockedWeekdays, true)) {
+                    continue;
+                }
                 $isTeacherBlocked = $blockedPolicies
                     ->where('params_json.teacher_id', $teacherId)
                     ->where('params_json.weekday', $timeSlot->weekday)

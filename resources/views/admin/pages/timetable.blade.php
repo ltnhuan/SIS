@@ -16,6 +16,10 @@
             @csrf
             <button>Công bố TKB</button>
         </form>
+        <form method="post" action="/quan-tri/xep-tkb/duyet-doi-lich">
+            @csrf
+            <button class="secondary">Duyệt đổi lịch/dạy bù</button>
+        </form>
     </div>
 </div>
 <div class="card">

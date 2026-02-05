@@ -33,12 +33,14 @@
     <a href="/quan-tri/ctdt">CTĐT (Phiên bản)</a>
     <a href="/quan-tri/ke-hoach">Kế hoạch theo khóa</a>
     <a href="/quan-tri/mo-lop">Mở lớp & Đăng ký</a>
+    <a href="/quan-tri/apps">App SV/GV/PH</a>
     <a href="/quan-tri/xep-tkb">Xếp TKB</a>
     <a href="/quan-tri/diem-danh">Điểm danh</a>
     <a href="/quan-tri/diem-so">Điểm số & GPA</a>
     <a href="/quan-tri/canh-bao">Cảnh báo</a>
     <a href="/quan-tri/tickets">Ticket/Đơn từ</a>
     <a href="/quan-tri/thong-bao">Thông báo</a>
+    <a href="/quan-tri/tot-nghiep">Tốt nghiệp</a>
 </nav>
 <div class="container">
     @if(session('status'))

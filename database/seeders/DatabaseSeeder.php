@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use App\Modules\Core\Models\Tenant;
 use App\Modules\Core\Models\Campus;
 use App\Modules\Core\Models\Department;
@@ -32,7 +33,17 @@ use App\Modules\Enrollment\Models\ClassSection;
 use App\Modules\Enrollment\Models\Enrollment;
 use App\Modules\Enrollment\Models\Waitlist;
 use App\Modules\Attendance\Models\AttendancePolicy;
+use App\Modules\Attendance\Models\ExamEligibility;
 use App\Modules\Grades\Models\GradingScale;
+use App\Modules\Grades\Models\GradeBook;
+use App\Modules\Grades\Models\GradeEntry;
+use App\Modules\StudyPlan\Models\AlertThreshold;
+use App\Modules\StudyPlan\Models\Alert;
+use App\Modules\Notification\Models\Notification;
+use App\Modules\Timetabling\Models\TimetableChangeRequest;
+use App\Modules\Graduation\Models\GraduationCandidate;
+use App\Modules\Graduation\Models\GraduationCommittee;
+use App\Modules\Graduation\Models\GraduationMinute;
 
 class DatabaseSeeder extends Seeder
 {
@@ -151,6 +162,24 @@ class DatabaseSeeder extends Seeder
         Permission::create(['code' => 'timetable.publish', 'name' => 'Công bố thời khóa biểu']);
         Permission::create(['code' => 'grades.finalize', 'name' => 'Khóa sổ điểm']);
 
+        $adminRoleId = Role::where('code', 'admin_truong')->value('id');
+        $daoTaoRoleId = Role::where('code', 'dao_tao')->value('id');
+
+        DB::table('role_user')->insert([
+            [
+                'user_id' => 1,
+                'role_id' => $adminRoleId,
+                'scope_type' => 'campus',
+                'scope_id' => $campus->id,
+            ],
+            [
+                'user_id' => 1,
+                'role_id' => $daoTaoRoleId,
+                'scope_type' => 'campus',
+                'scope_id' => $campus->id,
+            ],
+        ]);
+
         $teacher1 = Teacher::create([
             'tenant_id' => $tenant->id,
             'code' => 'T01',
@@ -251,6 +280,22 @@ class DatabaseSeeder extends Seeder
             'course_id' => $course2->id,
         ]);
 
+        AlertThreshold::create([
+            'tenant_id' => $tenant->id,
+            'type' => 'EARLY_WARNING',
+            'params_json' => ['gpa_min' => 2.0],
+            'is_enabled' => true,
+        ]);
+
+        Alert::create([
+            'student_id' => 1,
+            'type' => 'EARLY_WARNING',
+            'severity' => 'Cao',
+            'snapshot_json' => ['note' => 'Cảnh báo sớm demo'],
+            'status' => 'open',
+            'created_at' => now(),
+        ]);
+
         $class1 = ClassSection::create([
             'term_id' => $term->id,
             'course_id' => $course1->id,
@@ -279,6 +324,16 @@ class DatabaseSeeder extends Seeder
             'max_credits' => 10,
         ]);
 
+        $gradeBook1 = GradeBook::create([
+            'class_section_id' => $class1->id,
+            'status' => 'draft',
+        ]);
+
+        $gradeBook2 = GradeBook::create([
+            'class_section_id' => $class2->id,
+            'status' => 'draft',
+        ]);
+
         for ($i = 1; $i <= 40; $i++) {
             $student = Student::create([
                 'tenant_id' => $tenant->id,
@@ -297,6 +352,13 @@ class DatabaseSeeder extends Seeder
                     'status' => 'enrolled',
                     'created_at' => now(),
                 ]);
+
+                GradeEntry::create([
+                    'grade_book_id' => $gradeBook1->id,
+                    'student_id' => $student->id,
+                    'score' => null,
+                    'status' => 'draft',
+                ]);
             }
 
             if ($i <= 25) {
@@ -305,6 +367,13 @@ class DatabaseSeeder extends Seeder
                     'class_section_id' => $class2->id,
                     'status' => 'enrolled',
                     'created_at' => now(),
+                ]);
+
+                GradeEntry::create([
+                    'grade_book_id' => $gradeBook2->id,
+                    'student_id' => $student->id,
+                    'score' => null,
+                    'status' => 'draft',
                 ]);
             } elseif ($i <= 35) {
                 Waitlist::create([
@@ -325,6 +394,15 @@ class DatabaseSeeder extends Seeder
             'is_enabled' => true,
         ]);
 
+        ExamEligibility::create([
+            'student_id' => 1,
+            'course_id' => $course1->id,
+            'term_id' => $term->id,
+            'is_eligible' => true,
+            'reason' => null,
+            'updated_at' => now(),
+        ]);
+
         GradingScale::create([
             'tenant_id' => $tenant->id,
             'code' => '10-4',
@@ -334,6 +412,90 @@ class DatabaseSeeder extends Seeder
                 ['min' => 5.5, 'gpa' => 2.0],
                 ['min' => 4.0, 'gpa' => 1.0],
             ],
+        ]);
+
+        Notification::insert([
+            [
+                'tenant_id' => $tenant->id,
+                'source_type' => 'system',
+                'source_id' => 0,
+                'category' => 'System',
+                'severity' => 'Khẩn',
+                'recipient_type' => 'all',
+                'recipient_id' => 0,
+                'title' => 'Thông báo Khẩn',
+                'body' => 'Đây là thông báo mức Khẩn.',
+                'payload_json' => [],
+                'created_at' => now(),
+            ],
+            [
+                'tenant_id' => $tenant->id,
+                'source_type' => 'system',
+                'source_id' => 0,
+                'category' => 'System',
+                'severity' => 'Cao',
+                'recipient_type' => 'all',
+                'recipient_id' => 0,
+                'title' => 'Thông báo Cao',
+                'body' => 'Đây là thông báo mức Cao.',
+                'payload_json' => [],
+                'created_at' => now(),
+            ],
+            [
+                'tenant_id' => $tenant->id,
+                'source_type' => 'system',
+                'source_id' => 0,
+                'category' => 'System',
+                'severity' => 'Trung',
+                'recipient_type' => 'all',
+                'recipient_id' => 0,
+                'title' => 'Thông báo Trung',
+                'body' => 'Đây là thông báo mức Trung.',
+                'payload_json' => [],
+                'created_at' => now(),
+            ],
+            [
+                'tenant_id' => $tenant->id,
+                'source_type' => 'system',
+                'source_id' => 0,
+                'category' => 'System',
+                'severity' => 'Thường',
+                'recipient_type' => 'all',
+                'recipient_id' => 0,
+                'title' => 'Thông báo Thường',
+                'body' => 'Đây là thông báo mức Thường.',
+                'payload_json' => [],
+                'created_at' => now(),
+            ],
+        ]);
+
+        TimetableChangeRequest::create([
+            'term_id' => $term->id,
+            'type' => 'CHANGE_REQUEST',
+            'requested_by' => $teacher1->id,
+            'status' => 'pending',
+            'reason' => 'Xin đổi lịch dạy bù (demo).',
+            'payload_json' => ['note' => 'Demo change request'],
+            'created_at' => now(),
+        ]);
+
+        $committee = GraduationCommittee::create([
+            'term_id' => $term->id,
+            'name' => 'Hội đồng tốt nghiệp Demo',
+            'members_json' => ['GV A', 'GV B'],
+        ]);
+
+        GraduationCandidate::create([
+            'term_id' => $term->id,
+            'student_id' => 1,
+            'status' => 'pending',
+            'detail_json' => ['note' => 'Ứng viên demo'],
+        ]);
+
+        GraduationMinute::create([
+            'committee_id' => $committee->id,
+            'content_json' => ['note' => 'Biên bản demo'],
+            'created_at' => now(),
         ]);
     }
 }

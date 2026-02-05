@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Modules\Grades\Models\GradeBook;
 use App\Modules\Grades\Models\GradeEntry;
 use App\Modules\Core\Services\AuditLogger;
+use App\Modules\Core\Services\RbacService;
+use Illuminate\Http\Request;
 
 class GradesController extends Controller
 {
@@ -28,8 +30,13 @@ class GradesController extends Controller
         return back()->with('status', 'Đã chấm điểm ngẫu nhiên cho 10 dòng dữ liệu.');
     }
 
-    public function finalize(AuditLogger $logger)
+    public function finalize(AuditLogger $logger, RbacService $rbac, Request $request)
     {
+        $userId = $request->user()?->id ?? 1;
+        if (! $rbac->userHasRoleInScope($userId, ['dao_tao', 'admin_truong'], 'campus', 1)) {
+            return back()->with('status', 'Bạn không có quyền khóa sổ điểm.');
+        }
+
         $gradeBook = GradeBook::latest('id')->first();
         if (! $gradeBook) {
             return back()->with('status', 'Chưa có sổ điểm để khóa.');

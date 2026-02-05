@@ -8,12 +8,13 @@ use App\Modules\Grades\Http\Controllers\Admin\GradesController;
 use App\Modules\AcademicStatus\Http\Controllers\Admin\AcademicStatusController;
 use App\Modules\CaseManagement\Http\Controllers\Admin\TicketController;
 use App\Modules\Notification\Http\Controllers\Admin\NotificationController;
+use App\Modules\Graduation\Http\Controllers\Admin\GraduationController;
 
 Route::get('/', function () {
     return redirect('/quan-tri');
 });
 
-Route::prefix('quan-tri')->group(function () {
+Route::middleware('access.log')->prefix('quan-tri')->group(function () {
     Route::get('/', [DashboardController::class, 'index']);
     Route::get('/to-chuc', [DashboardController::class, 'organization']);
     Route::get('/sinh-vien', [DashboardController::class, 'students']);
@@ -21,10 +22,12 @@ Route::prefix('quan-tri')->group(function () {
     Route::get('/ctdt', [DashboardController::class, 'curriculum']);
     Route::get('/ke-hoach', [DashboardController::class, 'studyPlan']);
     Route::get('/mo-lop', [DashboardController::class, 'enrollment']);
+    Route::get('/apps', [DashboardController::class, 'apps']);
     Route::get('/xep-tkb', [TimetableController::class, 'index']);
     Route::post('/xep-tkb/tao-run', [TimetableController::class, 'createRun']);
     Route::post('/xep-tkb/chay-solver', [TimetableController::class, 'runSolver']);
     Route::post('/xep-tkb/cong-bo', [TimetableController::class, 'publish']);
+    Route::post('/xep-tkb/duyet-doi-lich', [TimetableController::class, 'approveChangeRequest']);
     Route::get('/diem-danh', [AttendanceController::class, 'index']);
     Route::post('/diem-danh/tao-buoi', [AttendanceController::class, 'createSessions']);
     Route::get('/diem-so', [GradesController::class, 'index']);
@@ -34,4 +37,6 @@ Route::prefix('quan-tri')->group(function () {
     Route::post('/canh-bao/tinh-gpa', [AcademicStatusController::class, 'computeGpa']);
     Route::get('/tickets', [TicketController::class, 'index']);
     Route::get('/thong-bao', [NotificationController::class, 'index']);
+    Route::get('/tot-nghiep', [GraduationController::class, 'index']);
+    Route::post('/tot-nghiep/duyet', [GraduationController::class, 'approve']);
 });

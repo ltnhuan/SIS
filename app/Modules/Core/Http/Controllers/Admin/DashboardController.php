@@ -63,4 +63,9 @@ class DashboardController extends Controller
     {
         return view('admin.pages.enrollment');
     }
+
+    public function apps()
+    {
+        return view('admin.pages.apps');
+    }
 }

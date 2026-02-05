@@ -22,3 +22,4 @@ Sau đó truy cập `http://localhost:8000/quan-tri` để xem dashboard.
 
 - Dữ liệu mẫu được tạo trong `DatabaseSeeder`.
 - Bộ xếp TKB sử dụng solver greedy demo (không gọi external solver).
+- Các trang demo thêm: App SV/GV/PH và tốt nghiệp (stub) trong `/quan-tri`.
