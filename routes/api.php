@@ -47,3 +47,4 @@ Route::middleware('access.log')->group(function () {
 
     Route::get('/thong-bao', [ApiNotificationController::class, 'index']);
 });
+require __DIR__.'/api_academic_planning.php';
